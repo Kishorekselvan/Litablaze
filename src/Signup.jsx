@@ -25,6 +25,14 @@ export default function Signup() {
     <>
       {/* INLINE STYLES — UNCHANGED */}
       <style>{`
+      .page-center {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
         * {
           box-sizing: border-box;
           margin: 0;
@@ -115,6 +123,7 @@ export default function Signup() {
       `}</style>
 
       {/* STRUCTURE MUST MATCH ORIGINAL HTML */}
+      <div className="page-center">
       <div className="login-box signup-box">
         <div className="login-title">LITABLAZE</div>
         <div className="login-subtitle">SIGN UP</div>
@@ -168,6 +177,7 @@ export default function Signup() {
         <div className="note">
           Your details will be used only for event communication
         </div>
+      </div>
       </div>
     </>
   );

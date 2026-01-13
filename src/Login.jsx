@@ -24,6 +24,14 @@ export default function Login() {
   return (
     <>
       <style>{`
+      .page-center {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Times New Roman", serif; }
         body {
           height: 100vh;
@@ -93,7 +101,7 @@ export default function Login() {
           text-align: center;
         }
       `}</style>
-
+      <div className="page-center">
       <div className="login-box">
         <div className="login-title">LITABLAZE</div>
         <div className="login-subtitle">SIGN IN</div>
@@ -127,6 +135,7 @@ export default function Login() {
         <div className="note">
           Your details will be used only for event communication
         </div>
+      </div>
       </div>
     </>
   );

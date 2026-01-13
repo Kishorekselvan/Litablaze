@@ -71,6 +71,14 @@ export default function Profile() {
     <>
       {/* ================= STYLES (MATCH profile.html) ================= */}
       <style>{`
+      .page-center {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
         body {
           margin: 0;
           min-height: 100vh;
@@ -171,7 +179,9 @@ export default function Profile() {
       `}</style>
 
       {/* ================= UI ================= */}
-      <div className="profile-card">
+      <div className="page-center">
+  <div className="profile-card">
+
         {loading ? (
           <h1
             style={{
@@ -226,7 +236,7 @@ export default function Profile() {
           </>
         )}
     </div>
-
+      </div>
     </>
   );
 }

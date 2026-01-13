@@ -238,6 +238,7 @@ const Litablaze = () => {
   const [sheetRegistrations, setSheetRegistrations] = useState({});
   const [localRegistrations, setLocalRegistrations] = useState({});
   const [registeredEventKeys, setRegisteredEventKeys] = useState({});
+  const [registeringEventKey, setRegisteringEventKey] = useState(null);
 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhHFITHPKnvJOknTeL4XxfQk2xvZIfx3hUehtXrSV-EXZe9TPFVfZ2yp884nmay84n/exec";
   const upsideDownSectionRef = useRef(null);
@@ -366,49 +367,69 @@ if (cachedKeys) {
     return null;
   };
 
-const isEventRegistered = (eventKey) => {
-  return !!registeredEventKeys[eventKey];
-};
 
 
 
-  const registerForEvent = async (eventKey) => {
-    if (!profile?.email) {
-      window.location.href = '/login';
+const registerForEvent = async (eventKey) => {
+  if (!profile?.email) {
+    alert("Please login to register for events");
+    window.location.href = "/login";
+    return;
+  }
+
+  if (isEventRegistered(eventKey)) return;
+
+  setRegisteringEventKey(eventKey); // 🔄 START loading
+
+  const eventName = eventData[eventKey]?.name || eventKey;
+
+  const payload = new FormData();
+  payload.append("action", "register");
+  payload.append("event", eventName);
+  payload.append("email", profile.email);
+  payload.append("name", profile.name || "");
+  payload.append("college", profile.college || "");
+  payload.append("department", profile.department || "");
+  payload.append("phone", profile.phone || "");
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: payload,
+    });
+
+    const text = await res.text();
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("SERVER RESPONSE:", text);
+      alert("Registration failed. Try again.");
       return;
     }
 
-    const eventName = eventData[eventKey]?.name || eventKey;
-    const updatedLocalRegs = { ...localRegistrations };
-    updatedLocalRegs[eventName] = {
-      litid: profile.litid || '',
-      timestamp: new Date().toISOString()
-    };
-    
-    setLocalRegistrations(updatedLocalRegs);
-    localStorage.setItem('litablaze_local_regs', JSON.stringify(updatedLocalRegs));
-
-    // Call to server
-    const payload = new FormData();
-    payload.append('action', 'register');
-    payload.append('event', eventName);
-    payload.append('email', profile.email);
-    payload.append('name', profile.name || '');
-    payload.append('college', profile.college || '');
-    payload.append('department', profile.department || '');
-    payload.append('phone', profile.phone || '');
-
-    try {
-      const res = await fetch(SCRIPT_URL, { method: 'POST', body: payload });
-      const data = await res.json();
-      
-      if (data?.success) {
-        await fetchRegistrationsForProfile();
-      }
-    } catch (err) {
-      console.error('Registration error:', err);
+    if (data.success) {
+      setRegisteredEventKeys((prev) => {
+        const updated = { ...prev, [eventKey]: true };
+        localStorage.setItem(
+          "litablaze_registered_keys",
+          JSON.stringify(updated)
+        );
+        return updated;
+      });
+    } else {
+      alert(data.message || "Registration failed");
     }
-  };
+  } catch (err) {
+    console.error("Registration error:", err);
+    alert("Network error. Try again.");
+  } finally {
+    setRegisteringEventKey(null); // ✅ STOP loading
+  }
+};
+
+
 
 const fetchRegistrationsForProfile = async () => {
   if (!profile?.email) return;
@@ -526,7 +547,9 @@ const fetchRegistrationsForProfile = async () => {
     const isCarnival = eventCategory?.toLowerCase() === 'carnival';
     openModal(eventKey, isCarnival);
   };
-
+  const isEventRegistered = (eventKey) => {
+  return !!registeredEventKeys[eventKey];
+};
   const handleRegisterClick = (e, eventKey, eventCategory) => {
     e.stopPropagation();
     if (isEventRegistered(eventKey)) return;
@@ -587,13 +610,24 @@ const fetchRegistrationsForProfile = async () => {
         <h3 className="event-title">{cardData.name}</h3>
         <p className="event-desc">{cardData.shortDesc}</p>
         {!isCarnival && (
-          <button 
-            className={`register-btn ${isRegistered ? 'registered' : ''}`}
-            onClick={(e) => handleRegisterClick(e, eventKey, eventCategory)}
-            disabled={isRegistered}
-          >
-            {isRegistered ? 'Registered' : 'Register'}
-          </button>
+          <button
+  className={`register-btn ${
+    isRegistered
+      ? "registered"
+      : registeringEventKey === eventKey
+      ? "registering"
+      : ""
+  }`}
+  onClick={(e) => handleRegisterClick(e, eventKey, eventCategory)}
+  disabled={isRegistered || registeringEventKey === eventKey}
+>
+  {isRegistered
+    ? "Registered"
+    : registeringEventKey === eventKey
+    ? "Registering..."
+    : "Register"}
+</button>
+
         )}
       </div>
     );
